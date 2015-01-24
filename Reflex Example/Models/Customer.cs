@@ -16,9 +16,9 @@ namespace Reflex_Example.Models
 
         public List<Review> Reviews()
         {
-            return this.HasMany<Review>(id,"id", "customer_id");//Need to change this
+            //return this.HasMany<Review>(id,"id", "customer_id");//Need to change this
             //Or 
-            //return this.HasMany<Review>(id);
+            return HasMany<Review>(this);
         }
     }
 }

@@ -153,38 +153,73 @@ namespace Reflex
 
         public List<T> HasMany<T>(object value ,string primary, string foreign)
         {
+            Type type = typeof(T);
             List<Where> wh = new List<Where>();
             wh.Add(new Where(foreign,"=",value.ToString()));
             return Sele<T>(wh);
         }
 
-        public List<T> HasMany<T>(object value)
+        public int Save<T>(object thisobject)
         {
-            throw new NotImplementedException();
+            Type type = thisobject.GetType();
+            return Insert<T>(thisobject.GetType().Name + 's', thisobject);
         }
 
-        public T Insert<T>(string table)
+        public List<T> HasMany<T>(object thisclass)
         {
+            Type type = typeof(T);
+            //Console.WriteLine(thisclass.GetType().Name);
+            //Console.WriteLine(thisclass.GetType().GetProperty("id").GetValue(thisclass).ToString());
+            List<Where> wh = new List<Where>();
+            wh.Add(new Where(thisclass.GetType().Name + "_id","=", thisclass.GetType().GetProperty("id").GetValue(thisclass).ToString()));
+            return Sele<T>(wh);
+        }
+
+        public int Insert<T>(string table, object data)
+        {
+            int id = 0;
             if (OpenConnection())
             {
-                string query = "INSERT INTO `library`(`name`, `directory`) VALUES ('Best','C:/');SELECT LAST_INSERT_ID() as id;";
+                string query = "INSERT INTO `" + table + "` (";
+                string values = ") VALUES (";
+                //Run through every property (`name`, `directory`) VALUES ('Best','C:/')
+                PropertyInfo[] pinfo = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                for (int i = 0; i < pinfo.Count(); i++)
+                {
+                    if (pinfo[i].Name != "id")
+                    {
+                        query += "`" + pinfo[i].Name + "`";
+                        values += "'" + pinfo[i].GetValue(this, null) +"'";
+                        if (i != pinfo.Count() - 1)
+                        {
+                            query += ",";
+                            values += ",";
+                        }
+                    }
+                }
+
+                query += values + ");SELECT LAST_INSERT_ID() as id;";
+                Console.WriteLine(query);
                 sqlquery = new MySqlCommand(query, sqlconnection);
 
                 reader = sqlquery.ExecuteReader();
                 while (reader.Read())
                 {
-                    Console.WriteLine(reader.GetValue(0));
+                    id = int.Parse(reader.GetValue(0).ToString());
                 }
                 CloseConnection();
             }
-            return (T)Convert.ChangeType("s", typeof(T));
+            return id;
         }
 
         /// <summary>
         /// Database Configuration
         /// </summary>
+        public static int count { get; set; }
         private static void Connect()
         {
+            count++;
+            Console.WriteLine("Connecting to Database T:"+ count +".");
             string server = "localhost";
             string database = "reflex";
             string uid = "root";

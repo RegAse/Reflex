@@ -17,7 +17,15 @@ namespace Reflex_Example.ViewModels
         {
             customers = Customer.All<Customer>();
             //This works
-            reviews = Review.Where("id", "=", "2").Get<Review>();
+            //reviews = Review.Where("id", "=", "2").Get<Review>();
+            reviews = customers[1].Reviews();
+            Customer cust = new Customer();
+            cust.Message = "This is a message.";
+            cust.Name = "Leo";
+            //cust.Save<Customer>(cust);
+            Review review = new Review();
+            review.Content = "THis is a RAD REview";
+            //review.Save<Review>(review);
         }
     }
 }
