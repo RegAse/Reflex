@@ -162,34 +162,87 @@ namespace Reflex
         public int Save<T>(object thisobject)
         {
             Type type = thisobject.GetType();
-            return Insert<T>(thisobject.GetType().Name + 's', thisobject);
+            string name = thisobject.GetType().Name;
+            if (name[name.Length - 1] == 'y')
+            {
+                name = name.Substring(0,name.Length - 1) + "ies";
+            }
+            else if (name[name.Length - 1] != 's')
+            {
+                name += "s";
+            }
+            return Insert<T>(name , thisobject);
+        }
+
+        public void Delete<T>(object thisobject)
+        {
+            throw new NotImplementedException();
         }
 
         public List<T> HasMany<T>(object thisclass)
         {
             Type type = typeof(T);
-            //Console.WriteLine(thisclass.GetType().Name);
-            //Console.WriteLine(thisclass.GetType().GetProperty("id").GetValue(thisclass).ToString());
             List<Where> wh = new List<Where>();
             wh.Add(new Where(thisclass.GetType().Name + "_id","=", thisclass.GetType().GetProperty("id").GetValue(thisclass).ToString()));
             return Sele<T>(wh);
         }
 
+        /// <summary>
+        /// TODO Fix this function
+        /// </summary>
+        /// <param name="thisobject"></param>
+        /// <returns></returns>
+        public bool UsesTimestamps(object thisobject)
+        {
+            Type type = thisobject.GetType();
+            if (type.GetProperty("timestamps") != null)
+            {
+                /* Reflex returns the timestamp your timestamps variable is equals */
+                return (bool)type.GetProperty("timestamps").GetValue(this, null);
+            }
+            else
+            {
+                /* This is the Default, timestamps are defaulted so it returns true */
+                return true;
+            }
+        }
+
+
+        /// <summary>
+        /// Insert into the database
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="table"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public int Insert<T>(string table, object data)
         {
             int id = 0;
             if (OpenConnection())
             {
+                /* Check if timestamps are used */
+                //bool usesTimestamps = UsesTimestamps(data);
                 string query = "INSERT INTO `" + table + "` (";
                 string values = ") VALUES (";
                 //Run through every property (`name`, `directory`) VALUES ('Best','C:/')
                 PropertyInfo[] pinfo = data.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
                 for (int i = 0; i < pinfo.Count(); i++)
                 {
-                    if (pinfo[i].Name != "id")
+                    if ( pinfo[i].Name.Equals("created_at", StringComparison.InvariantCultureIgnoreCase)
+                        || pinfo[i].Name.Equals("updated_at", StringComparison.InvariantCultureIgnoreCase))
                     {
                         query += "`" + pinfo[i].Name + "`";
-                        values += "'" + pinfo[i].GetValue(this, null) +"'";
+                        values += '"' + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + '"';
+                        if (i != pinfo.Count() - 1)
+                        {
+                            query += ",";
+                            values += ",";
+                        }
+                    }
+                    else if (pinfo[i].Name != "id")
+                    {
+                        query += "`" + pinfo[i].Name + "`";
+                        values += '"' + pinfo[i].GetValue(this, null).ToString() +'"';
                         if (i != pinfo.Count() - 1)
                         {
                             query += ",";
@@ -199,7 +252,7 @@ namespace Reflex
                 }
 
                 query += values + ");SELECT LAST_INSERT_ID() as id;";
-                Console.WriteLine(query);
+                //Console.WriteLine(query); Show executed query
                 sqlquery = new MySqlCommand(query, sqlconnection);
 
                 reader = sqlquery.ExecuteReader();
@@ -216,14 +269,18 @@ namespace Reflex
         /// Database Configuration
         /// </summary>
         public static int count { get; set; }
+        public static string Server { get; set; }
+        public static string Username { get; set; }
+        public static string Password { get; set; }
+        public static string Database { get; set; }
         private static void Connect()
         {
             count++;
             Console.WriteLine("Connecting to Database T:"+ count +".");
-            string server = "localhost";
-            string database = "reflex";
-            string uid = "root";
-            string password = "";
+            string server = (Server != null ? Server : "localhost");
+            string database = (Database != null ? Database : "reflex");
+            string uid = (Username != null ? Username : "root");
+            string password = (Password != null ? Password : "");
 
             string constring = "server= " + server + ";userid=" + uid + ";password= " + password + ";database=" + database;
 

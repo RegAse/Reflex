@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Reflex_Example.Models;
+using System.IO;
 
 namespace Reflex_Example.ViewModels
 {
@@ -25,7 +26,18 @@ namespace Reflex_Example.ViewModels
             //cust.Save<Customer>(cust);
             Review review = new Review();
             review.Content = "THis is a RAD REview";
-            //review.Save<Review>(review);
+            review.Save<Review>(review);
+            
+            /*using(StreamReader reader = new StreamReader("../../countries.txt"))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    Country country = new Country();
+                    country.country = line;
+                    country.Save<Country>(country);
+                }
+            }*/
         }
     }
 }
