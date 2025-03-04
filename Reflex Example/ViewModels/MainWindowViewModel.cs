@@ -25,19 +25,6 @@ namespace Reflex_Example.ViewModels
             Review review = new Review();
             review.Content = "THis is a RAD REview";
             review.Save<Review>(review);
-
-            //This works
-            //reviews = Review.Where("id", "=", "2").Get<Review>();
-            /*using(StreamReader reader = new StreamReader("../../countries.txt"))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    Country country = new Country();
-                    country.country = line;
-                    country.Save<Country>(country);
-                }
-            }*/
         }
     }
 }
